@@ -49,7 +49,7 @@ class OrganizationDeleteView(DeleteView):
 class OrganizationMemberList(ListView):
     model = OrgMember
     context_object_name = 'home'
-    template_name = 'org_mem_list.html'
+    template_name = 'orgmember_list.html'
     paginate_by = 5 
 
     def get_queryset(self, *args, **kwargs):
@@ -68,21 +68,21 @@ class OrganizationMemberList(ListView):
 class OrganizationMemberCreateView(CreateView):
     model = OrgMember
     form_class = OrgMemberForm
-    template_name = 'org_mem_add.html'
-    success_url = reverse_lazy('organization-mem-list')
+    template_name = 'orgmember_add.html'
+    success_url = reverse_lazy('orgmember-list')
 
 
 class OrganizationMemberUpdateView(UpdateView):
     model = OrgMember
     form_class = OrgMemberForm
-    template_name = 'org_mem_edit.html'
-    success_url = reverse_lazy('organization-mem-list')
+    template_name = 'orgmember_edit.html'
+    success_url = reverse_lazy('orgmember-list')
 
 
 class OrganizationMemberDeleteView(DeleteView):
     model = OrgMember
-    template_name = 'org_mem_del.html'
-    success_url = reverse_lazy('organization-mem-list')
+    template_name = 'orgmember_del.html'
+    success_url = reverse_lazy('orgmember-list')
 
 class StudentList(ListView):
     model = Student
@@ -190,82 +190,103 @@ class HomePageView(ListView):
     template_name = "index.html"
 
 
-def index(request):
-    # Top 5 Organizations by Number of Members
-    org_members_counts = OrgMember.objects.values('organization__name').annotate(num_students=Count('student')).order_by('-num_students')[:5]
-    labels = [org_member['organization__name'] for org_member in org_members_counts]
-    data = [org_member['num_students'] for org_member in org_members_counts]
+class ChartView(ListView):
+    template_name = 'index.html'
 
-    # Top 5 Colleges by Number of Programs
-    top_colleges = Program.objects.values(college_name=F('college__college_name')).annotate(program_count=Count('prog_name')).order_by('-program_count')[:5]
-    colleges = []
-    for college in top_colleges:
-        college_name = college['college_name']
-        if college_name == 'College of Sciences':
-            colleges.append('CS')
-        elif college_name == 'College of Teacher Education':
-            colleges.append('CTE')
-        elif college_name == 'College of Arts and Humanities':
-            colleges.append('CAH')
-        elif college_name == 'College of Business and Accountancy':
-            colleges.append('CBA')
-        elif college_name == 'College of Engineering Architecture and Technology':
-            colleges.append('CEAT')
-    num_programs = [college['program_count'] for college in top_colleges]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
-    # Top 5 Programs by Number of Students
-    student_counts = Student.objects.values('program__prog_name').annotate(num_students=Count('student_id')).order_by('-num_students')[:5]
-    programs = [student['program__prog_name'] for student in student_counts]
-    num_students = [student['num_students'] for student in student_counts]
+    def get_queryset(self, *args, **kwargs):
+        pass
 
-    # Number of Organizations per College
-    organizations_per_college = Organization.objects.values('college__college_name').annotate(num_organizations=Count('id'))
-    college_names = [entry['college__college_name'] for entry in organizations_per_college]
-    num_organizations = [entry['num_organizations'] for entry in organizations_per_college]
+def BarStudentPerProgram(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT studentorg_program.prog_name AS program_name, COUNT(studentorg_student.id) AS num_students
+            FROM studentorg_student
+            INNER JOIN studentorg_program ON studentorg_student.program_id = studentorg_program.id
+            GROUP BY program_id
+        """)
+        rows = cursor.fetchall()
 
-    # Programs with the Least Number of Students
-    student_less = Student.objects.values('program__prog_name').annotate(less_students=Count('student_id')).order_by('less_students')[:5]
-    program_names = [student['program__prog_name'] for student in student_less]
-    programx = []
-    for program_name in program_names:
-        if program_name == 'Bachelor of Elementary Education':
-            programx.append('BEED')
-        elif program_name == 'Bachelor of Arts in Communication':
-            programx.append('BAC')
-        elif program_name == 'Bachelor of Arts in Political Science':
-            programx.append('BAPS')
-        elif program_name == 'Bachelor of Science in Accountancy':
-            programx.append('BSA')
-        elif program_name == 'Bachelor of Secondary Education':
-            programx.append('BSE')
-        else:
-            programx.append(program_name)
-    less_students = [student['less_students'] for student in student_less]
+    result_with_program_names = {}
+    for row in rows:
+        program_name = row[0]
+        num_students = row[1]
+        result_with_program_names[program_name] = num_students
 
-    # Number of Students per College
-    college_aliases = {
-            'College of Sciences': 'CS',
-            'College of Teacher Education': 'CTE',
-            'College of Arts and Humanities': 'CAH',
-            'College of Business and Accountancy': 'CBA',
-            'College of Engineering Architecture and Technology': 'CEAT',
-            'College of Hospitality Management and Tourism': 'CHTM',
-            'College of Nursing and Health Sciences': 'CNHS',
-            'College of Criminal Justice Education': 'CCJE',
-        }
+    return JsonResponse(result_with_program_names)
 
-    all_colleges = College.objects.all()
-    all_college_names = [college_aliases.get(college.college_name, college.college_name) for college in all_colleges]
-    student_counts = [Student.objects.filter(program__college=college).count() for college in all_colleges]
+def BarProgramPerCollege(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT c.college_name, COUNT(p.id) as program_count
+               FROM studentorg_program p
+               INNER JOIN studentorg_college c ON p.college_id = c.id
+               GROUP BY c.college_name
+        """)
+        rows = cursor.fetchall()
 
+    result_with_program_count = {}
+    for row in rows:
+        college_name = row[0]
+        num_program = row[1]
+        result_with_program_count[college_name] = num_program
 
-    context = {
-        'labels': labels, 'data': data,
-        'colleges': colleges, 'num_programs': num_programs,
-        'programs': programs, 'num_students': num_students,
-        'college_names': college_names, 'num_organizations': num_organizations,
-        'programx': programx, 'less_students': less_students,
-        'all_college_names': all_college_names, 'student_counts': student_counts,
-    }
+    return JsonResponse(result_with_program_count)
 
-    return render(request, 'index.html', context)
+def PieStudentPerCollege(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT c.college_name AS college_name, COUNT(s.id) AS num_students
+            FROM studentorg_student s
+            INNER JOIN studentorg_program p ON s.program_id = p.id
+            INNER JOIN studentorg_college c ON p.college_id = c.id
+            GROUP BY c.college_name
+        """)
+        rows = cursor.fetchall()
+
+    result_with_college_names = {}
+    for row in rows:
+        college_name = row[0]
+        num_students = row[1]
+        result_with_college_names[college_name] = num_students
+
+    return JsonResponse(result_with_college_names)
+
+def DoughnutOrgPerCollege(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT c.college_name AS college_name, COUNT(o.id) AS org_count
+            FROM studentorg_organization o
+            INNER JOIN studentorg_college c ON o.college_id = c.id
+            GROUP BY c.college_name
+        """)
+        rows = cursor.fetchall()
+
+    result_with_org_count = {}
+    for row in rows:
+        college_name = row[0]
+        num_org = row[1]
+        result_with_org_count[college_name] = num_org
+
+    return JsonResponse(result_with_org_count)
+
+def RadarMemberPerOrg(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT o.name, COUNT(om.id) as member_count
+            FROM studentorg_orgmember om
+            INNER JOIN studentorg_organization o ON om.organization_id = o.id
+            GROUP BY o.name
+        """)
+        rows = cursor.fetchall()
+
+    results = {}
+    for row in rows:
+        org_name = row[0]
+        num_member = row[1]
+        results[org_name] = num_member
+
+    return JsonResponse(results)

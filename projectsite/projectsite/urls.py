@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
-from studentorg.views import HomePageView, OrganizationList, OrganizationCreateView, OrganizationUpdateView, OrganizationDeleteView, OrganizationMemberList, OrganizationMemberCreateView, OrganizationMemberUpdateView, OrganizationMemberDeleteView, StudentList, StudentCreateView, StudentUpdateView, StudentDeleteView, CollegeList, CollegeCreateView, CollegeUpdateView, CollegeDeleteView, ProgramList, ProgramCreateView, ProgramUpdateView, ProgramDeleteView
+from studentorg.views import HomePageView, OrganizationList, OrganizationCreateView, OrganizationUpdateView, OrganizationDeleteView, OrganizationMemberList, OrganizationMemberCreateView, OrganizationMemberUpdateView, OrganizationMemberDeleteView, StudentList, StudentCreateView, StudentUpdateView, StudentDeleteView, CollegeList, CollegeCreateView, CollegeUpdateView, CollegeDeleteView, ProgramList, ProgramCreateView, ProgramUpdateView, ProgramDeleteView, ChartView, BarStudentPerProgram, PieStudentPerCollege, DoughnutOrgPerCollege, RadarMemberPerOrg, BarProgramPerCollege
 from studentorg import views
 from django.contrib.auth import views as auth_views
 
@@ -24,7 +24,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('', views.index, name='home'),
+    path('', views.HomePageView.as_view(), name='home'),
     path('organization_list', OrganizationList.as_view(), name='organization-list'), 
     path('organization_list/add', OrganizationCreateView.as_view(), name='organization-add'),
     path('organization_list/<pk>', OrganizationUpdateView.as_view(), name='organization-update'), 
@@ -45,7 +45,12 @@ urlpatterns = [
     path('program_list/add', ProgramCreateView.as_view(), name='program-add'), 
     path('program_list/<pk>', ProgramUpdateView.as_view(), name='program-update'),
     path('program_list/<pk>/delete', ProgramDeleteView.as_view(), name='program-delete'),
+    path('dashboard_chart', ChartView.as_view(), name='dashboard-chart'),
+    path('barChart/', BarStudentPerProgram, name='chart'),
+    path('progBarChart/', BarProgramPerCollege, name='chart'),
+    path('pieChart/', PieStudentPerCollege, name='chart'),
+    path('doughnutChart/', DoughnutOrgPerCollege, name='chart'),
+    path('radarChart/', RadarMemberPerOrg, name='chart'),
     re_path(r'^login/$', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     re_path(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
-    path('index/', views.index, name='index'),
 ]
