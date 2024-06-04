@@ -1,17 +1,18 @@
-
 {% extends 'base.html' %} {% load static %} {% block content %}
 <div class="content">
   <div class="page-inner">
     <h4 class="page-title">Dashboard</h4>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <div class="row">
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Largest Student Organizations by Membership</div>
+            <div class="card-title" style="text-align: center;">Largest Student Organizations by Membership</div>
           </div>
           <div class="card-body">
             <div class="chart-container">
-              <canvas id="progBarChart"></canvas>
+              <canvas id="progBarChart"></canvas> 
             </div>
           </div>
         </div>
@@ -19,7 +20,7 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Colleges Offering the Most Programs</div>
+            <div class="card-title" style="text-align: center;">Colleges Offering the Most Programs</div>
           </div>
           <div class="card-body">
             <div class="chart-container">
@@ -31,7 +32,7 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Most Popular College Programs</div>
+            <div class="card-title" style="text-align: center;">Most Popular College Programs</div>
           </div>
           <div class="card-body">
             <div class="chart-container">
@@ -43,7 +44,7 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Leading Colleges by Number of Organizations</div>
+            <div class="card-title" style="text-align: center;">Leading Colleges by Number of Organizations</div>
           </div>
           <div class="card-body">
             <div class="chart-container">
@@ -55,7 +56,7 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Programs with the Least Student Enrollment</div>
+            <div class="card-title" style="text-align: center;">Programs with the Least Student Enrollment</div>
           </div>
           <div class="card-body">
             <div class="chart-container">
@@ -68,6 +69,7 @@
 </div>
 
 {% block chart %}
+<canvas id="studentChart" width="400" height="400"></canvas>
 <script>
   function loadChartData() {
 

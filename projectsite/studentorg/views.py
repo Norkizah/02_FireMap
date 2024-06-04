@@ -1,3 +1,5 @@
+from multiprocessing import connection
+from django.http import JsonResponse
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from studentorg.models import Organization, OrgMember, Student, College, Program
@@ -11,6 +13,8 @@ from django.db.models import Q
 from django.utils.dateparse import parse_date
 from django.shortcuts import render
 from django.db.models import Count, F
+from django.db import connection
+
 
 @method_decorator(login_required, name="dispatch")
 
@@ -236,6 +240,25 @@ def BarProgramPerCollege(request):
 
     return JsonResponse(result_with_program_count)
 
+def RadarMemberPerOrg(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT o.name, COUNT(om.id) as member_count
+            FROM studentorg_orgmember om
+            INNER JOIN studentorg_organization o ON om.organization_id = o.id
+            GROUP BY o.name
+        """)
+        rows = cursor.fetchall()
+
+    results = {}
+    for row in rows:
+        org_name = row[0]
+        num_member = row[1]
+        results[org_name] = num_member
+
+    return JsonResponse(results)
+
+
 def PieStudentPerCollege(request):
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -272,21 +295,5 @@ def DoughnutOrgPerCollege(request):
         result_with_org_count[college_name] = num_org
 
     return JsonResponse(result_with_org_count)
-
-def RadarMemberPerOrg(request):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT o.name, COUNT(om.id) as member_count
-            FROM studentorg_orgmember om
-            INNER JOIN studentorg_organization o ON om.organization_id = o.id
-            GROUP BY o.name
-        """)
-        rows = cursor.fetchall()
-
-    results = {}
-    for row in rows:
-        org_name = row[0]
-        num_member = row[1]
-        results[org_name] = num_member
 
     return JsonResponse(results)

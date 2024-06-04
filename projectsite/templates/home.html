@@ -1,322 +1,244 @@
-{% extends 'base.html' %}{% load static %}{% block content %}
-<div class="container-fluid">
+{% extends 'base.html' %} {% load static %} {% block content %}
+<div class="content">
+  <div class="page-inner">
+    <h4 class="page-title">Dashboard</h4>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <div class="row">
-        <div class="col-md-6 mb-4" style="margin-top: 80px;">
-            <div class="card h-100"> 
-                <div class="card-body">
-                    <div class="chart-container" style="position: relative; height: 450px; width: 100%;"> 
-                        <p class="text-center font-weight-bold">Largest Student Organizations by Membership</p> 
-                        <canvas id="pie-chart"></canvas>
-                    </div>
-                </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="text-align: center;">Largest Student Organizations by Membership</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="progBarChart"></canvas> 
             </div>
+          </div>
         </div>
-        <div class="col-md-6 mb-4" style="margin-top: 80px;">
-            <div class="card h-100"> 
-                <div class="card-body" >
-                    <div class="chart-container" style="position: relative; height: 450px; width: 100%;"> 
-                        <p class="text-center font-weight-bold">Colleges Offering the Most Programs</p> 
-                        <canvas id="colleges-chart"></canvas>
-                    </div>
-                </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="text-align: center;">Colleges Offering the Most Programs</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="barChart"></canvas>
             </div>
+          </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card h-100"> 
-                <div class="card-body">
-                    <div class="chart-container" style="position: relative; height: 450px; width: 100%;"> 
-                        <p class="text-center font-weight-bold">Most Popular College Programs</p> 
-                        <canvas id="program-chart"></canvas>
-                    </div>                
-                </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="text-align: center;">Most Popular College Programs</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="radarChart"></canvas>
             </div>
+          </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card h-100"> 
-                <div class="card-body">
-                    <div class="chart-container" style="position: relative; height: 450px; width: 100%;"> 
-                        <p class="text-center font-weight-bold">Leading Colleges by Number of Organizations</p> 
-                        <canvas id="organizations-chart"></canvas>
-                    </div>
-                </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="text-align: center;">Leading Colleges by Number of Organizations</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="pieChart"></canvas>
             </div>
+          </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card h-100"> 
-                <div class="card-body">
-                    <div class="chart-container" style="position: relative; height: 450px; width: 100%;"> 
-                        <p class="text-center font-weight-bold">Programs with the Least Student Enrollment</p> 
-                        <canvas id="less-chart"></canvas>
-                    </div>                
-                </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="text-align: center;">Programs with the Least Student Enrollment</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="doughnutChart"></canvas>
             </div>
+          </div>
         </div>
-                </div>
-            </div>
-        </div>
-    </div>
+      </div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
-
+{% block chart %}
+<canvas id="studentChart" width="400" height="400"></canvas>
 <script>
-    // Organization Chart (Line Chart)
-    var orgLabels = { labels , safe };
-    var orgData = { data , safe };
+  function loadChartData() {
 
-    var orgCtx = document.getElementById('pie-chart').getContext('2d');
-    var orgChart = new Chart(orgCtx, {
-        type: 'line',
-        data: {
-            labels: orgLabels,
-            datasets: [{
-                label: 'Number of Members',
-                data: orgData,
-                fill: false,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            }
-        }
-    });
+    fetch("/pieChart/")
+      .then((response) => response.json())
+      .then((result_with_college_names) => {
+        var college = Object.keys(result_with_college_names);
+        var counts = Object.values(result_with_college_names);
+        var pieChart = document.getElementById("pieChart").getContext("2d");
 
-    // Colleges with Most Programs (Bar Chart)
-    var colleges = { colleges , safe };
-    var num_programs = { num_programs , safe };
-
-    var collegesCtx = document.getElementById('colleges-chart').getContext('2d');
-    var collegesChart = new Chart(collegesCtx, {
-        type: 'bar',
-        data: {
-            labels: colleges,
-            datasets: [{
-                label: 'Number of Programs',
-                data: num_programs,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 205, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 205, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            }
-        }
-    });
-
-    // Most Popular College Programs (Polar Area Chart)
-    var programs = { programs , safe };
-    var numStudents = { num_students , safe };
-
-    var programCtx = document.getElementById('program-chart').getContext('2d');
-    var studentChart = new Chart(programCtx, {
-        type: 'polarArea',
-        data: {
-            labels: programs,
-            datasets: [{
-                label: 'Number of Students',
-                data: numStudents,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 205, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 205, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            }
-        }
-    });
-
-    // Leading Colleges by Number of Organizations (Radar Chart)
-    var collegeNames = { college_names , safe };
-    var numOrganizations = { num_organizations, safe };
-
-    var organizationsCtx = document.getElementById('organizations-chart').getContext('2d');
-    var organizationsChart = new Chart(organizationsCtx, {
-        type: 'radar',
-        data: {
-            labels: collegeNames,
-            datasets: [{
-                label: 'Number of Organizations',
-                data: numOrganizations,
-                backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scale: {
-                ticks: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    // College Programs with Fewer Enrollments (Horizontal Bar Chart)
-    var programx = { programx , safe };
-    var less_students = { less_students , safe };
-
-    var lessCtx = document.getElementById('less-chart').getContext('2d');
-    var lessChart = new Chart(lessCtx, {
-        type: 'horizontalBar',
-        data: {
-            labels: programx,
-            datasets: [{
-                label: 'Number of Students',
-                data: less_students,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 205, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 205, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                xAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }],
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            }
-        }
-    });
-
-    // College list (Bar and Line Chart)
-    var collegeNames = { all_college_names , safe };
-    var studentCounts = { student_counts , safe };
-
-    var allCollegeData = {
-        labels: collegeNames,
-        datasets: [{
-            label: 'PSU Colleges',
-            data: new Array(collegeNames.length).fill(1),
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.3)',
-                'rgba(54, 162, 235, 0.3)',
-                'rgba(255, 205, 86, 0.3)',
-                'rgba(75, 192, 192, 0.3)',
-                'rgba(153, 102, 255, 0.3)',
-                'rgba(255, 159, 64, 0.3)',
-                'rgba(255, 0, 255, 0.2)',
-                'rgba(0, 255, 255, 0.3)'
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 205, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)',
-                'rgba(255, 0, 255, 1)',
-                'rgba(0, 255, 255, 1)'
-            ],
-            borderWidth: 1,
-            yAxisID: 'y-axis-1',
-        }, {
-            label: 'Students',
-            type: 'line',
-            data: studentCounts,
-            fill: false,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-            yAxisID: 'y-axis-2'
-        }]
-    };
-
-    var allCollegeConfig = {
-        type: 'bar',
-        data: allCollegeData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                yAxes: [{
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    id: 'y-axis-1',
-                }, {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    id: 'y-axis-2',
-                    gridLines: {
-                        drawOnChartArea: false,
-                    },
-                }],
+        var myPieChart = new Chart(pieChart, {
+          type: 'pie',
+          data: {
+              datasets: [
+                {
+                  data: counts,
+                  borderWidth: 0,
+                },
+              ],
+              labels: college,
             },
-        },
-    };
+          options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              legend: {
+                position: "bottom",
+              },
+              tooltips: false,
+              layout: {
+                padding: {
+                  left: 20,
+                  right: 20,
+                  top: 20,
+                  bottom: 20,
+                },
+              },
+            },
+        });
+      })
+      .catch((error) => console.error("Error:", error));
 
-    var allCollegeCtx = document.getElementById('allcollege-chart').getContext('2d');
-    new Chart(allCollegeCtx, allCollegeConfig);
+    fetch("/barChart/")
+        .then((response) => response.json())
+        .then((result_with_program_names) => {
+          var program = Object.keys(result_with_program_names);
+          var counts = Object.values(result_with_program_names);
+          var barChart = document.getElementById("barChart").getContext("2d");
+          
+        var myBarChart = new Chart(barChart, {
+          type: 'bar',
+          data: {
+            labels: program,
+            datasets: [{
+              label: 'Number of Students',
+              data: counts,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            },
+            
+          }
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+
+      fetch("/progBarChart/")
+        .then((response) => response.json())
+        .then((result_with_program_count) => {
+          var program = Object.keys(result_with_program_count);
+          var counts = Object.values(result_with_program_count);
+          var progBarChart = document.getElementById("progBarChart").getContext("2d");
+          
+        var myProgBarChart = new Chart(progBarChart, {
+          type: 'bar',
+          data: {
+            labels: program,
+            datasets: [{
+              label: 'Number of Programs',
+              data: counts,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            },
+            
+          }
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+
+    fetch("/doughnutChart/")
+      .then((response) => response.json())
+      .then((result_with_org_count) => {
+        var college = Object.keys(result_with_org_count);
+        var counts = Object.values(result_with_org_count);
+        var doughnutChart = document.getElementById("doughnutChart").getContext("2d");
+
+        var myDoughnutChart = new Chart(doughnutChart, {
+          type: "doughnut",
+          data: {
+            datasets: [
+              {
+                data: counts,
+              }
+            ],
+            labels: college,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+              padding: {
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20,
+              },
+            },
+          },
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+
+      fetch("/radarChart/")
+      .then((response) => response.json())
+      .then((results) => {
+        var org = Object.keys(results);
+        var counts = Object.values(results);
+        var radarChart = document.getElementById("radarChart").getContext("2d");
+
+        var myRadarChart = new Chart(radarChart, {
+          type: "radar",
+          data: {
+            labels: org,
+            datasets: [
+              {
+                label: "Number of Org Members",
+                data: counts,
+                fill: true,
+              }
+            ],
+          },
+          options: {
+            elements: {
+              line: {
+                borderWidth: 1
+              }
+            },
+          },
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+  loadChartData();
 </script>
 {% endblock %}
+{% endblock %} 
